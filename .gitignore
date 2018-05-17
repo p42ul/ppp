@@ -2,3 +2,11 @@
 elm-stuff
 # elm-repl generated files
 repl-temp-*
+
+# PyCharm stuff
+.idea
+# Virtualenvs
+*/venv/*
+
+# Generated html
+*.html

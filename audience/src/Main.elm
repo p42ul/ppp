@@ -6,6 +6,11 @@ import Html.Events exposing (onInput)
 import WebSocket
 
 
+backendServerAddress : String
+backendServerAddress =
+    "ws://localhost/send"
+
+
 main : Program Never Model Msg
 main =
     Html.program
@@ -29,11 +34,6 @@ type alias Model =
     { sliderValue : Int
     , lastMessage : String
     }
-
-
-backendServerAddress : String
-backendServerAddress =
-    "ws://localhost"
 
 
 
@@ -88,4 +88,4 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    WebSocket.listen backendServerAddress ReceiveMessage
+    WebSocket.keepAlive backendServerAddress

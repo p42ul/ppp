@@ -1,12 +1,22 @@
+# Elm #
 # elm-package generated files
 elm-stuff
 # elm-repl generated files
 repl-temp-*
 
-# PyCharm stuff
+# Elm build artifacts #
+*.js
+*.html
+
+
+# PyCharm #
 .idea
-# Virtualenvs
+
+# Virtualenv #
 */venv/*
 
-# Generated html
-*.html
+# Mac OS X #
+.DS_Store
+
+# Visual Studio Code #
+.vscode/

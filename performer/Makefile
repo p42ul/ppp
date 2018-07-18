@@ -1,2 +1,2 @@
-index.html : src/Main.elm
-	elm-make ./src/Main.elm --output index.html
+Performer.js : src/Performer.elm src/WebMidi.elm
+	elm-make ./src/Performer.elm --output Performer.js

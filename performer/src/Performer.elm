@@ -2,8 +2,16 @@ module Performer exposing (..)
 
 import Html exposing (..)
 import Html.Events exposing (..)
+import Html.Attributes
 import WebMidi exposing (MidiPort)
-import Array.Hamt as Array exposing (Array)
+import WebSocket
+
+
+-- CONFIGURATION
+
+
+backendServerAddress =
+    "ws://localhost:8080/listen"
 
 
 main : Program Never Model Msg
@@ -18,7 +26,12 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model [ "none so far" ]
+    ( { receivedMessages = []
+      , midiInputs = []
+      , midiOutputs = []
+      , midiIn = Nothing
+      , midiOut = Nothing
+      }
     , Cmd.none
     )
 
@@ -29,6 +42,10 @@ init =
 
 type alias Model =
     { receivedMessages : List String
+    , midiInputs : List MidiPort
+    , midiOutputs : List MidiPort
+    , midiIn : Maybe MidiPort
+    , midiOut : Maybe MidiPort
     }
 
 
@@ -38,7 +55,9 @@ type alias Model =
 
 type Msg
     = ReceiveMessage String
-    | GenError
+    | ChangeMidiAccess ( List MidiPort, List MidiPort )
+    | ChangeMidiIn String
+    | WebSocketMessage String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -47,8 +66,27 @@ update msg model =
         ReceiveMessage message ->
             ( { model | receivedMessages = message :: model.receivedMessages }, Cmd.none )
 
-        GenError ->
-            ( model, WebMidi.sendMidi (Array.repeat 3 10) )
+        ChangeMidiAccess ( inputs, outputs ) ->
+            ( { model | midiOutputs = outputs, midiInputs = inputs }, Cmd.none )
+
+        ChangeMidiIn id ->
+            ( { model | midiIn = selectMidiPort model.midiInputs id }, WebMidi.selectMidiIn (Just id) )
+
+        WebSocketMessage wsmsg ->
+            ( { model | receivedMessages = wsmsg :: model.receivedMessages }, Cmd.none )
+
+
+selectMidiPort : List MidiPort -> String -> Maybe MidiPort
+selectMidiPort midiPorts id =
+    case midiPorts of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            if x.id == id then
+                Just x
+            else
+                selectMidiPort xs id
 
 
 
@@ -57,12 +95,12 @@ update msg model =
 
 onMidiAccess : ( List MidiPort, List MidiPort ) -> Msg
 onMidiAccess data =
-    ReceiveMessage ("midi access changed!" ++ toString data)
+    ChangeMidiAccess data
 
 
 onRecvMidi : List Int -> Msg
 onRecvMidi midi =
-    ReceiveMessage ("midi values seen: " ++ toString midi)
+    ReceiveMessage ("midi value seen: " ++ toString midi)
 
 
 onMidiError : ( String, String ) -> Msg
@@ -71,11 +109,12 @@ onMidiError ( name, message ) =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.batch
         [ WebMidi.midiAccess onMidiAccess
         , WebMidi.recvMidi onRecvMidi
         , WebMidi.midiError onMidiError
+        , WebSocket.listen backendServerAddress WebSocketMessage
         ]
 
 
@@ -83,14 +122,44 @@ subscriptions model =
 -- VIEW
 
 
+makeSelectionOption : MidiPort -> Html msg
+makeSelectionOption midiPort =
+    option [ Html.Attributes.value midiPort.id ]
+        [ text midiPort.name
+        ]
+
+
+midiPortName : Maybe MidiPort -> String
+midiPortName maybeMidi =
+    case maybeMidi of
+        Nothing ->
+            "None"
+
+        Just midiPort ->
+            midiPort.name
+
+
+nullMidiOption : Html msg
+nullMidiOption =
+    option [ Html.Attributes.value "0" ]
+        [ text "None" ]
+
+
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ onClick GenError ]
-            [ text "This app attempts to print midi messages as they are received."
-            , text "Click this message to generate a midi message."
+        [ div []
+            [ text "Midi inputs: "
+            , select [ onInput ChangeMidiIn ] (nullMidiOption :: (List.map makeSelectionOption model.midiInputs))
+            , text ("Selected input: " ++ midiPortName model.midiIn)
             ]
         , div []
-            [ text (toString model.receivedMessages)
+            [ text " Midi outputs: "
+            , select [] (List.map makeSelectionOption model.midiOutputs)
             ]
+        , div []
+            (List.map
+                (\msg -> div [] [ text msg ])
+                model.receivedMessages
+            )
         ]

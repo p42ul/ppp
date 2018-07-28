@@ -4,6 +4,9 @@ import websockets
 listeners = set()
 senders = dict()
 
+SERVER_ADDRESS = '0.0.0.0'
+PORT = '8080'
+
 
 def average() -> str:
     if len(senders) == 0:
@@ -31,6 +34,7 @@ async def sender_handler(websocket):
     try:
         async for message in websocket:
             try:
+                print(f'received message: {message} from client {websocket}')
                 senders[websocket] = int(message)
             except ValueError:
                 print(f"non-integer data received: {message}")
@@ -48,7 +52,8 @@ async def handler(websocket, path):
         await sender_handler(websocket)
 
 
+print(f'Running server at {SERVER_ADDRESS} on port {PORT}...')
 asyncio.get_event_loop().set_debug(enabled=True)
 asyncio.get_event_loop().run_until_complete(
-    websockets.serve(handler, 'localhost', 80))
+    websockets.serve(handler, SERVER_ADDRESS, PORT))
 asyncio.get_event_loop().run_forever()

@@ -5,6 +5,7 @@ import Html.Events exposing (..)
 import Html.Attributes
 import WebMidi exposing (MidiPort)
 import WebSocket
+import Array.Hamt as Array exposing (Array)
 
 
 -- CONFIGURATION
@@ -56,6 +57,7 @@ type alias Model =
 type Msg
     = ReceiveMessage String
     | ChangeMidiAccess ( List MidiPort, List MidiPort )
+    | ChangeMidiOut String
     | ChangeMidiIn String
     | WebSocketMessage String
 
@@ -67,13 +69,16 @@ update msg model =
             ( { model | receivedMessages = message :: model.receivedMessages }, Cmd.none )
 
         ChangeMidiAccess ( inputs, outputs ) ->
-            ( { model | midiOutputs = outputs, midiInputs = inputs }, Cmd.none )
+            ( { model | midiInputs = inputs, midiOutputs = outputs }, Cmd.none )
+
+        ChangeMidiOut id ->
+            ( { model | midiOut = selectMidiPort model.midiOutputs id }, WebMidi.selectMidiOut (Just id) )
 
         ChangeMidiIn id ->
             ( { model | midiIn = selectMidiPort model.midiInputs id }, WebMidi.selectMidiIn (Just id) )
 
         WebSocketMessage wsmsg ->
-            ( { model | receivedMessages = wsmsg :: model.receivedMessages }, Cmd.none )
+            ( { model | receivedMessages = wsmsg :: model.receivedMessages }, WebMidi.sendMidi (Array.fromList [ 144, Result.withDefault 64 (String.toFloat wsmsg) |> truncate, 100 ]) )
 
 
 selectMidiPort : List MidiPort -> String -> Maybe MidiPort
@@ -149,14 +154,17 @@ view : Model -> Html Msg
 view model =
     div []
         [ div []
-            [ text "Midi inputs: "
+            [ text " Midi inputs: "
             , select [ onInput ChangeMidiIn ] (nullMidiOption :: (List.map makeSelectionOption model.midiInputs))
-            , text ("Selected input: " ++ midiPortName model.midiIn)
             ]
         , div []
             [ text " Midi outputs: "
-            , select [] (List.map makeSelectionOption model.midiOutputs)
+            , select [ onInput ChangeMidiOut ] (nullMidiOption :: (List.map makeSelectionOption model.midiOutputs))
             ]
+        , div []
+            [ text ("Current Midi Input: " ++ (midiPortName model.midiIn)) ]
+        , div []
+            [ text ("Current Midi Output: " ++ (midiPortName model.midiOut)) ]
         , div []
             (List.map
                 (\msg -> div [] [ text msg ])

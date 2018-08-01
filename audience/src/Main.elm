@@ -8,7 +8,7 @@ import WebSocket
 
 backendServerAddress : String
 backendServerAddress =
-    "ws://localhost:8080/send"
+    "ws://paulair.local:8080/send"
 
 
 main : Program Never Model Msg

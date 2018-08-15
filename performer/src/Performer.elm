@@ -86,10 +86,10 @@ update msg model =
             ( { model | midiIn = selectMidiPort model.midiInputs id }, WebMidi.selectMidiIn (Just id) )
 
         ChangeMidiCC cc ->
-            ( { model | midiCc = Result.withDefault 0 (String.toInt cc) }, Cmd.none )
+            ( { model | midiCc = clamp 0 127 (Result.withDefault 0 (String.toInt cc)) }, Cmd.none )
 
         ChangeMidiChannel channel ->
-            ( { model | midiChannel = Result.withDefault 0 (String.toInt channel) }, Cmd.none )
+            ( { model | midiChannel = clamp 1 16 (Result.withDefault 1 (String.toInt channel)) }, Cmd.none )
 
         WebSocketMessage wsmsg ->
             let
@@ -142,8 +142,9 @@ sendCC channel cc value =
     let
         -- 176 = Hexadecimal "B" shifted left 4
         -- e.g. the 4 higher-order bits of a MIDI CC message "status byte"
+        -- we subtract 1 from the channel to convert from one-index to zero-index
         midiChannel =
-            176 + (clamp 0 16 channel)
+            176 + (clamp 0 15 (channel - 1))
 
         midiCc =
             clamp 0 127 cc

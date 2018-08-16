@@ -1,14 +1,27 @@
 module Main exposing (..)
 
+import Color
+import Color.Colormaps
+import Device.Motion exposing (Acceleration, Motion, changes)
 import Html exposing (..)
-import Html.Attributes as HtmlAttrs exposing (..)
-import Html.Events exposing (onInput)
+import Html.Attributes exposing (style)
 import WebSocket
+
+
+-- CONFIGURATION
 
 
 backendServerAddress : String
 backendServerAddress =
     "ws://paulair.local:8080/send"
+
+
+{-| Greater values will require less motion to "max out" the colormap.
+   Smaller value will require more motion to register.
+-}
+motionScaleFactor : Float
+motionScaleFactor =
+    1 / 20
 
 
 main : Program Never Model Msg
@@ -23,7 +36,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model 0 "", Cmd.none )
+    ( Model Color.lightBlue, Cmd.none )
 
 
 
@@ -31,8 +44,7 @@ init =
 
 
 type alias Model =
-    { sliderValue : Int
-    , lastMessage : String
+    { backgroundColor : Color.Color
     }
 
 
@@ -41,44 +53,56 @@ type alias Model =
 
 
 type Msg
-    = ChangeSlider String
-    | ReceiveMessage String
+    = MovePhone Motion
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ChangeSlider newValue ->
+        MovePhone motion ->
             let
-                newModel =
-                    { model | sliderValue = Result.withDefault 0 (String.toInt newValue) }
-            in
-                ( newModel, WebSocket.send backendServerAddress newValue )
+                magnitude =
+                    accelerationToMagnitude (motion.acceleration)
 
-        ReceiveMessage message ->
-            let
-                newModel =
-                    { model | lastMessage = message }
+                midi =
+                    magnitudeToMidi magnitude
             in
-                ( newModel, Cmd.none )
+                ( { model | backgroundColor = Color.Colormaps.plasma magnitude }, WebSocket.send backendServerAddress (toString midi) )
+
+
+accelerationToMagnitude : Acceleration -> Float
+accelerationToMagnitude { x, y, z } =
+    ((abs x) + (abs y) + (abs z) / 3) * motionScaleFactor
+
+
+magnitudeToMidi : Float -> Int
+magnitudeToMidi f =
+    (clamp 0 127 (floor (127 * f)))
 
 
 
 -- VIEW
 
 
+colorToRgbString : Color.Color -> String
+colorToRgbString c =
+    let
+        { red, green, blue, alpha } =
+            Color.toRgb c
+    in
+        "rgb(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ")"
+
+
 view : Model -> Html Msg
 view model =
-    div []
-        [ input
-            [ type_ "range"
-            , HtmlAttrs.min "0"
-            , HtmlAttrs.max "127"
-            , value <| toString model.sliderValue
-            , onInput ChangeSlider
+    div
+        [ style
+            [ ( "backgroundColor", colorToRgbString model.backgroundColor )
+            , ( "height", "100vh" )
+            , ( "width", "100vw" )
             ]
-            []
-        , text <| toString model
+        ]
+        [ text <| toString model
         ]
 
 
@@ -86,6 +110,14 @@ view model =
 -- SUBSCRIPTIONS
 
 
+handleMotion : Motion -> Msg
+handleMotion motion =
+    MovePhone motion
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    WebSocket.keepAlive backendServerAddress
+    Sub.batch
+        [ WebSocket.keepAlive backendServerAddress
+        , changes handleMotion
+        ]

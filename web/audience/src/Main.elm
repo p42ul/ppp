@@ -13,7 +13,7 @@ import WebSocket
 
 backendServerAddress : String
 backendServerAddress =
-    "ws://paulair.local:8080/send"
+    "ws://192.168.86.39:8080/send"
 
 
 {-| Greater values will require less motion to "max out" the colormap.

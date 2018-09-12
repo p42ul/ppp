@@ -33,7 +33,7 @@ init =
       , midiOutputs = []
       , midiIn = Nothing
       , midiOut = Nothing
-      , midiChannel = 0
+      , midiChannel = 1
       , midiCc = 0
       }
     , Cmd.none
@@ -94,21 +94,14 @@ update msg model =
         WebSocketMessage wsmsg ->
             let
                 maybeValue =
-                    String.toFloat wsmsg
+                    String.toInt wsmsg
             in
                 case maybeValue of
                     Err _ ->
                         ( { model | receivedMessages = ("unsent websocket message: " ++ wsmsg) :: model.receivedMessages }, Cmd.none )
 
-                    Ok float ->
-                        let
-                            value =
-                                truncate float
-
-                            message =
-                                "sending midi cc " ++ (toString model.midiCc) ++ " on channel: " ++ (toString model.midiChannel) ++ ": " ++ (toString value)
-                        in
-                            ( { model | receivedMessages = message :: model.receivedMessages }, (sendCC model.midiChannel model.midiCc value) )
+                    Ok int ->
+                        ( model, (sendCC model.midiChannel model.midiCc int) )
 
         MidiMessage midi ->
             ( { model | receivedMessages = (midiToString midi) :: model.receivedMessages }, Cmd.none )

@@ -1,6 +1,9 @@
 import asyncio
 import websockets
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 listeners = set()
 senders = dict()
 
@@ -11,7 +14,7 @@ PORT = '8080'
 def average() -> str:
     if len(senders) == 0:
         return '0'
-    return str(sum(senders.values()) / len(senders))
+    return str(sum(senders.values()) // len(senders))
 
 
 async def update_listeners():
@@ -33,11 +36,11 @@ async def listener_handler(websocket):
 async def sender_handler(websocket):
     try:
         async for message in websocket:
+            logging.debug(f'received message: {message} from client {websocket}')
             try:
-                print(f'received message: {message} from client {websocket}')
                 senders[websocket] = int(message)
             except ValueError:
-                print(f"non-integer data received: {message}")
+                logging.error(f"non-integer data received: {message}")
             await update_listeners()
     finally:
         if websocket in senders:
@@ -52,7 +55,7 @@ async def handler(websocket, path):
         await sender_handler(websocket)
 
 
-print(f'Running server at {SERVER_ADDRESS} on port {PORT}...')
+logging.info(f'Running PlexusPlay server at {SERVER_ADDRESS} on port {PORT}...')
 asyncio.get_event_loop().set_debug(enabled=True)
 asyncio.get_event_loop().run_until_complete(
     websockets.serve(handler, SERVER_ADDRESS, PORT))

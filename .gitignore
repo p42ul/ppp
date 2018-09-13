@@ -20,3 +20,6 @@ repl-temp-*
 
 # Visual Studio Code #
 .vscode/
+
+# Secrets #
+htpasswd

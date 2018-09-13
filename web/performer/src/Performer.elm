@@ -11,9 +11,12 @@ import WebSocket
 -- CONFIGURATION
 
 
+{-| This value will change in the future.
+A real configuration management tool would be the better way to do this.
+-}
 backendServerAddress : String
 backendServerAddress =
-    "ws://localhost:8080/listen"
+    "ws://104.197.110.253:8080/listen"
 
 
 main : Program Never Model Msg

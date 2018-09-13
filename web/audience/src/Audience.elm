@@ -11,9 +11,12 @@ import WebSocket
 -- CONFIGURATION
 
 
+{-| This value will change in the future.
+A real configuration management tool would be the better way to do this.
+-}
 backendServerAddress : String
 backendServerAddress =
-    "ws://plexusplay.app:8080/send"
+    "ws://104.197.110.253:8080/listen"
 
 
 {-| Greater values will require less motion to "max out" the colormap.

@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Audience exposing (..)
 
 import Color
 import Color.Colormaps
@@ -13,11 +13,11 @@ import WebSocket
 
 backendServerAddress : String
 backendServerAddress =
-    "ws://192.168.86.39:8080/send"
+    "ws://plexusplay.app:8080/send"
 
 
 {-| Greater values will require less motion to "max out" the colormap.
-   Smaller value will require more motion to register.
+Smaller value will require more motion to register.
 -}
 motionScaleFactor : Float
 motionScaleFactor =
@@ -62,7 +62,7 @@ update msg model =
         MovePhone motion ->
             let
                 magnitude =
-                    accelerationToMagnitude (motion.acceleration)
+                    accelerationToMagnitude motion.acceleration
 
                 midi =
                     magnitudeToMidi magnitude
@@ -72,12 +72,12 @@ update msg model =
 
 accelerationToMagnitude : Acceleration -> Float
 accelerationToMagnitude { x, y, z } =
-    ((abs x) + (abs y) + (abs z) / 3) * motionScaleFactor
+    (abs x + abs y + abs z / 3) * motionScaleFactor
 
 
 magnitudeToMidi : Float -> Int
 magnitudeToMidi f =
-    (clamp 0 127 (floor (127 * f)))
+    clamp 0 127 (floor (127 * f))
 
 
 
@@ -90,7 +90,7 @@ colorToRgbString c =
         { red, green, blue, alpha } =
             Color.toRgb c
     in
-        "rgb(" ++ (toString red) ++ ", " ++ (toString green) ++ ", " ++ (toString blue) ++ ")"
+        "rgb(" ++ toString red ++ ", " ++ toString green ++ ", " ++ toString blue ++ ")"
 
 
 view : Model -> Html Msg

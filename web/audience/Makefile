@@ -1,2 +1,3 @@
-index.html : src/Main.elm
-	elm-make ./src/Main.elm --output index.html
+build_dir = build
+$(build_dir)/index.html : src/Audience.elm
+	elm-make ./src/Audience.elm --output $(build_dir)/index.html

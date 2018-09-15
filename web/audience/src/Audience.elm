@@ -16,7 +16,7 @@ A real configuration management tool would be the better way to do this.
 -}
 backendServerAddress : String
 backendServerAddress =
-    "ws://35.237.20.170:8080/listen"
+    "wss://plexusplay.app:8080/listen"
 
 
 {-| Greater values will require less motion to "max out" the colormap.

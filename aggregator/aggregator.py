@@ -1,7 +1,9 @@
 import asyncio
+import ssl
 import websockets
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
 
 listeners = set()
@@ -9,6 +11,9 @@ senders = dict()
 
 SERVER_ADDRESS = '0.0.0.0'
 PORT = '8080'
+
+CERT_PATH = '/etc/letsencrypt/live/plexusplay.app/fullchain.pem'
+PRIVKEY_PATH = '/etc/letsencrypt/live/plexusplay.app/privkey.pem'
 
 
 def average() -> str:
@@ -55,8 +60,16 @@ async def handler(websocket, path):
         await sender_handler(websocket)
 
 
-logging.info(f'Running PlexusPlay server at {SERVER_ADDRESS} on port {PORT}...')
-asyncio.get_event_loop().set_debug(enabled=True)
-asyncio.get_event_loop().run_until_complete(
-    websockets.serve(handler, SERVER_ADDRESS, PORT))
-asyncio.get_event_loop().run_forever()
+def main():
+    logging.info(f'Running PlexusPlay server at {SERVER_ADDRESS} on port {PORT}...')
+    # Set up SSL
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(CERT_PATH, keyfile=PRIVKEY_PATH)
+    # Run server
+    asyncio.get_event_loop().run_until_complete(
+        websockets.serve(handler, SERVER_ADDRESS, PORT, ssl=ssl_context))
+    asyncio.get_event_loop().run_forever()
+
+
+if __name__ == '__main__':
+    main()

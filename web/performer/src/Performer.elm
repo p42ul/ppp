@@ -16,7 +16,7 @@ A real configuration management tool would be the better way to do this.
 -}
 backendServerAddress : String
 backendServerAddress =
-    "ws://104.197.110.253:8080/listen"
+    "ws://35.237.20.170:8080/listen"
 
 
 main : Program Never Model Msg

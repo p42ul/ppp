@@ -33,6 +33,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=builder /elm-src/performer/build /plexus/performer
 COPY --from=builder /elm-src/audience/build /plexus/audience
+RUN chmod -R 755 /plexus
 COPY ./htpasswd /secret/htpasswd
 
 EXPOSE 80

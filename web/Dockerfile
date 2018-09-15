@@ -31,9 +31,10 @@ RUN cd audience && \
 FROM nginx:alpine
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Move our build artifacts and includes into our webroot (/plexus)
 COPY --from=builder /elm-src/performer/build /plexus/performer
+COPY --from=builder /elm-src/performer/include /plexus/performer
 COPY --from=builder /elm-src/audience/build /plexus/audience
-RUN chmod -R 755 /plexus
 COPY ./htpasswd /secret/htpasswd
 
 EXPOSE 80

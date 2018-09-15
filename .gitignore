@@ -1,25 +1,22 @@
-# Elm #
 # elm-package generated files
 elm-stuff
 # elm-repl generated files
 repl-temp-*
 
-# Elm build artifacts #
-*.js
-*.html
+# Generated artifacts
+build/
 
-
-# PyCharm #
+# PyCharm environment
 .idea
 
-# Virtualenv #
+# Virtualenv stuff
 */venv/*
 
-# Mac OS X #
+# Mac OS X garbage
 .DS_Store
 
-# Visual Studio Code #
+# Visual Studio Code environment
 .vscode/
 
-# Secrets #
+# Secret stuff
 htpasswd

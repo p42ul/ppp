@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import ssl
 import websockets
@@ -11,9 +12,6 @@ senders = dict()
 
 SERVER_ADDRESS = '0.0.0.0'
 PORT = '8080'
-
-CERT_PATH = '/etc/letsencrypt/live/plexusplay.app/fullchain.pem'
-PRIVKEY_PATH = '/etc/letsencrypt/live/plexusplay.app/privkey.pem'
 
 
 def average() -> str:
@@ -60,15 +58,32 @@ async def handler(websocket, path):
         await sender_handler(websocket)
 
 
+def get_commandline_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--use_ssl', action='store_true', help='If this is set, SSL will be enabled for the server.')
+    parser.add_argument('--cert_path', help='The full path to the full SSL certificate chain.')
+    parser.add_argument('--privkey_path', help='The full path to the server\'s private key.')
+    return parser.parse_args()
+
+
 def main():
-    logging.info(f'Running PlexusPlay server at {SERVER_ADDRESS} on port {PORT}...')
-    # Set up SSL
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    ssl_context.load_cert_chain(CERT_PATH, keyfile=PRIVKEY_PATH)
-    # Run server
-    asyncio.get_event_loop().run_until_complete(
-        websockets.serve(handler, SERVER_ADDRESS, PORT, ssl=ssl_context))
-    asyncio.get_event_loop().run_forever()
+    logging.info(f'Starting PlexusPlay server at {SERVER_ADDRESS} on port {PORT}...')
+    args = get_commandline_args()
+    if args.use_ssl:
+        logging.info('SSL is enabled.')
+        if not args.cert_path or not args.privkey_path:
+            logging.error('cert_path and privkey_path are both required when use_ssl is enabled. Exiting.')
+            return
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_context.load_cert_chain(args.cert_path, keyfile=args.privkey_path)
+        asyncio.get_event_loop().run_until_complete(
+            websockets.serve(handler, SERVER_ADDRESS, PORT, ssl=ssl_context))
+        asyncio.get_event_loop().run_forever()
+    else:
+        logging.info('SSL is disabled.')
+        asyncio.get_event_loop().run_until_complete(
+            websockets.serve(handler, SERVER_ADDRESS, PORT))
+        asyncio.get_event_loop().run_forever()
 
 
 if __name__ == '__main__':

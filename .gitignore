@@ -20,3 +20,4 @@ build/
 
 # Secret stuff
 htpasswd
+*.pem

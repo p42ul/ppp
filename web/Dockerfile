@@ -2,10 +2,10 @@
 FROM archlinux/base as builder
 
 # Install prerequisites
-# (Ruby, RDoc, and Git are needed for elm-github-install)
-RUN pacman -Sy --noconfirm nodejs npm ruby ruby-rdoc git
+# (Ruby and Git are needed for elm-github-install)
+RUN pacman -Sy --noconfirm nodejs npm ruby git
 RUN npm install elm@elm0.18.0
-RUN gem install elm_install -v 1.6.1
+RUN gem install elm_install --no-document -v 1.6.1 
 
 # Add binaries to our path
 ENV PATH="$PATH:/node_modules/elm/bin"
@@ -37,4 +37,4 @@ COPY --from=builder /elm-src/performer/include /plexus/performer
 COPY --from=builder /elm-src/audience/build /plexus/audience
 COPY ./htpasswd /secret/htpasswd
 
-EXPOSE 80
+EXPOSE 443

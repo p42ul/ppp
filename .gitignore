@@ -9,6 +9,9 @@ build/
 # PyCharm environment
 .idea
 
+# Python temporary bytecode
+__pycache__/
+
 # Virtualenv stuff
 */venv/*
 

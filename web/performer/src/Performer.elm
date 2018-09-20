@@ -1,6 +1,7 @@
 module Performer exposing (..)
 
 import Array.Hamt as Array exposing (Array)
+import Config exposing (config)
 import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes
@@ -9,14 +10,14 @@ import WebSocket
 
 
 -- CONFIGURATION
+-- Configuration is injected at build time via Docker.
 
 
-{-| This value will change in the future.
-A real configuration management tool would be the better way to do this.
+{-| A <ws://> or <wss://> address from which our performer receives updates.
 -}
 backendServerAddress : String
 backendServerAddress =
-    "wss://plexusplay.app:8080/listen"
+    config.backendServerAddress
 
 
 main : Program Never Model Msg

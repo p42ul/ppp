@@ -19,6 +19,10 @@ WORKDIR /elm-src
 COPY ./audience ./audience
 COPY ./performer ./performer
 
+# Copy addition Elm config
+COPY ./conf/Config.elm ./audience/src
+COPY ./conf/Config.elm ./performer/src
+
 # Build that code!
 RUN cd performer && \
     elm-make --yes ./src/Performer.elm --output build/Performer.js

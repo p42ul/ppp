@@ -1,5 +1,6 @@
 module Audience exposing (..)
 
+import Config exposing (config)
 import Color
 import Color.Colormaps
 import Device.Motion exposing (Acceleration, Motion, changes)
@@ -9,22 +10,23 @@ import WebSocket
 
 
 -- CONFIGURATION
+-- Configuration is injected at build time via Docker.
 
 
-{-| This value will change in the future.
-A real configuration management tool would be the better way to do this.
+{-| A <ws://> or <wss://> address that our audience app sends data to.
 -}
 backendServerAddress : String
 backendServerAddress =
-    "wss://plexusplay.app:8080/send"
+    config.backendServerAddress
 
 
-{-| Greater values will require less motion to "max out" the colormap.
+{-| An amount to scale the device motion by.
+Greater values will require less motion to "max out" the colormap.
 Smaller value will require more motion to register.
 -}
 motionScaleFactor : Float
 motionScaleFactor =
-    1 / 20
+    config.motionScaleFactor
 
 
 main : Program Never Model Msg

@@ -29,12 +29,12 @@ RUN cd audience && \
 
 # This second stage serves the frontend code
 FROM nginx:alpine
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 
 # Move our build artifacts and includes into our webroot (/plexus)
 COPY --from=builder /elm-src/performer/build /plexus/performer
 COPY --from=builder /elm-src/performer/include /plexus/performer
 COPY --from=builder /elm-src/audience/build /plexus/audience
-COPY ./htpasswd /secret/htpasswd
+COPY ./conf/htpasswd /secret/htpasswd
 
 EXPOSE 443

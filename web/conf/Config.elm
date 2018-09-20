@@ -2,6 +2,7 @@ module Config exposing (config)
 
 
 config =
-    { backendServerAddress = "wss://plexusplay.app:8080"
+    { sendServerAddress = "wss://plexusplay.app:8080/send"
+    , listenServerAddress = "wss://plexusplay.app:8080/listen"
     , motionScaleFactor = 1 / 20
     }

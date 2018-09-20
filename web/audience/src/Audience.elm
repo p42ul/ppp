@@ -17,7 +17,7 @@ import WebSocket
 -}
 backendServerAddress : String
 backendServerAddress =
-    config.backendServerAddress
+    config.sendServerAddress
 
 
 {-| An amount to scale the device motion by.

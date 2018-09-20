@@ -17,7 +17,7 @@ import WebSocket
 -}
 backendServerAddress : String
 backendServerAddress =
-    config.backendServerAddress
+    config.listenServerAddress
 
 
 main : Program Never Model Msg

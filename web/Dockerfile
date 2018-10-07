@@ -1,6 +1,10 @@
 # This first stage builds the frontend code
 FROM archlinux/base as builder
 
+# Configuration
+ARG nginx_config="./conf/nginx.conf"
+ARG elm_config="./conf/Config.elm"
+
 # Install prerequisites
 # (Ruby and Git are needed for elm-github-install)
 RUN pacman -Sy --noconfirm nodejs npm ruby git
@@ -18,10 +22,9 @@ RUN echo "export PATH=\$PATH:$(ruby -e 'print Gem.user_dir')/bin" > /ruby_path
 WORKDIR /elm-src
 COPY ./audience ./audience
 COPY ./performer ./performer
-
-# Copy addition Elm config
-COPY ./conf/Config.elm ./audience/src
-COPY ./conf/Config.elm ./performer/src
+# Copy additional Elm config
+COPY ${elm_config} ./audience/src
+COPY ${elm_config} ./performer/src
 
 # Build that code!
 RUN cd performer && \
@@ -33,7 +36,7 @@ RUN cd audience && \
 
 # This second stage serves the frontend code
 FROM nginx:alpine
-COPY ./conf/nginx.conf /etc/nginx/nginx.conf
+COPY ${nginx_config} /etc/nginx/nginx.conf
 
 # Move our build artifacts and includes into our webroot (/plexus)
 COPY --from=builder /elm-src/performer/build /plexus/performer

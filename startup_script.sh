@@ -14,5 +14,9 @@ docker run -d -v /mnt/stateful_partition/etc/letsencrypt:/etc/letsencrypt -p 808
   --privkey_path /etc/letsencrypt/live/plexusplay.app/privkey.pem
 
 cd "${PPP_DIR}/web"
-docker build -t frontend .
+docker build -t frontend \
+  --build-arg elm_config=./conf/ConfigProd.elm \
+  --build-arg nginx_config=./conf/ngingx-prod.conf \
+  --build-arg htpasswd=./conf/htpasswd-prod \
+  .
 docker run -d -v /mnt/stateful_partition/etc/letsencrypt:/etc/letsencrypt -p 443:443 frontend

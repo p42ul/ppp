@@ -3,6 +3,9 @@ elm-stuff
 # elm-repl generated files
 repl-temp-*
 
+# Symlinks to config files
+**/src/Config*
+
 # Generated artifacts
 build/
 
@@ -22,5 +25,5 @@ __pycache__/
 .vscode/
 
 # Secret stuff
-htpasswd
+htpasswd*
 *.pem

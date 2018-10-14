@@ -1,5 +1,9 @@
 # ARG statements are scattered throughout the Dockerfile because
 # of this issue: https://github.com/moby/moby/issues/34129
+# All of these arguments must be specified at build time.
+# elm_config: relative path to Elm build-time configuration options
+# nginx_config: relative path to our NGINX config file
+# htpasswd: relative path to our password file that NGINX uses for auth
 ################################################################################
 # Stage 1: Build the frontend code                                             #
 ################################################################################
@@ -18,9 +22,9 @@ WORKDIR /elm-src
 COPY ./audience ./audience
 COPY ./performer ./performer
 # Copy additional Elm config
-ARG elm_config="./conf/Config.elm"
-COPY ${elm_config} ./audience/src
-COPY ${elm_config} ./performer/src
+ARG elm_config="set-me-at-build-time"
+COPY ${elm_config} ./audience/src/Config.elm
+COPY ${elm_config} ./performer/src/Config.elm
 
 # Build that code!
 RUN cd performer && \
@@ -35,8 +39,8 @@ RUN cd audience && \
 
 FROM nginx:alpine
 
-ARG nginx_config="./conf/nginx.conf"
-ARG htpasswd="./conf/htpasswd"
+ARG nginx_config="set-me-at-build-time"
+ARG htpasswd="set-me-at-build-time"
 
 COPY ${nginx_config} /etc/nginx/nginx.conf
 

@@ -5,8 +5,6 @@ import websockets
 
 import logging
 
-logging.basicConfig(level=logging.INFO)
-
 listeners = set()
 senders = dict()
 
@@ -28,26 +26,30 @@ async def update_listeners():
 
 async def listener_handler(websocket):
     listeners.add(websocket)
+    logging.debug(f'listener {websocket.remote_address} connected')
     try:
         async for message in websocket:
             # Wait until the connection is closed
             pass
     finally:
         listeners.remove(websocket)
+        logging.debug(f'listener {websocket.remote_address} disconnected')
 
 
 async def sender_handler(websocket):
     try:
+        logging.debug(f'sender {websocket.remote_address} connected')
         async for message in websocket:
-            logging.debug(f'received message: {message} from client {websocket}')
+            logging.debug(f'received message: {message} from sender {websocket.remote_address}')
             try:
                 senders[websocket] = int(message)
             except ValueError:
-                logging.error(f"non-integer data received: {message}")
+                logging.error(f"non-integer data received from sender {websocket.remote_address}: {message}")
             await update_listeners()
     finally:
         if websocket in senders:
             del senders[websocket]
+        logging.debug(f'sender {websocket.remote_address} disconnected')
         await update_listeners()
 
 
@@ -63,12 +65,21 @@ def get_commandline_args():
     parser.add_argument('--use_ssl', action='store_true', help='If this is set, SSL will be enabled for the server.')
     parser.add_argument('--cert_path', help='The full path to the full SSL certificate chain.')
     parser.add_argument('--privkey_path', help='The full path to the server\'s private key.')
+    parser.add_argument('--logging_level', help='How detailed the logs will be.',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'], default='info')
     return parser.parse_args()
 
 
+def get_logging_level(level_arg):
+    return getattr(logging, level_arg.upper())
+
+
 def main():
-    logging.info(f'Starting PlexusPlay server at {SERVER_ADDRESS} on port {PORT}...')
     args = get_commandline_args()
+    logging_level = get_logging_level(args.logging_level)
+    logging.basicConfig(level=logging_level)
+    logging.info(f'Starting PlexusPlay server at {SERVER_ADDRESS} on port {PORT} with logging level '
+                 f'{logging.getLevelName(logging_level)}...')
     if args.use_ssl:
         logging.info('SSL is enabled.')
         if not args.cert_path or not args.privkey_path:

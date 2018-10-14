@@ -33,9 +33,7 @@ main =
 init : ( Model, Cmd Msg )
 init =
     ( { receivedMessages = []
-      , midiInputs = []
       , midiOutputs = []
-      , midiIn = Nothing
       , midiOut = Nothing
       , midiChannel = 1
       , midiCc = 0
@@ -50,9 +48,7 @@ init =
 
 type alias Model =
     { receivedMessages : List String
-    , midiInputs : List MidiPort
     , midiOutputs : List MidiPort
-    , midiIn : Maybe MidiPort
     , midiOut : Maybe MidiPort
     , midiChannel : Int
     , midiCc : Int
@@ -67,7 +63,6 @@ type Msg
     = ReceiveMessage String
     | MidiAccess ( List MidiPort, List MidiPort )
     | ChangeMidiOut String
-    | ChangeMidiIn String
     | WebSocketMessage String
     | MidiMessage (List Int)
     | ChangeMidiChannel String
@@ -80,14 +75,11 @@ update msg model =
         ReceiveMessage message ->
             ( { model | receivedMessages = message :: model.receivedMessages }, Cmd.none )
 
-        MidiAccess ( inputs, outputs ) ->
-            ( { model | midiInputs = inputs, midiOutputs = outputs }, Cmd.none )
+        MidiAccess ( _, outputs ) ->
+            ( { model | midiOutputs = outputs }, Cmd.none )
 
         ChangeMidiOut id ->
             ( { model | midiOut = selectMidiPort model.midiOutputs id }, WebMidi.selectMidiOut (Just id) )
-
-        ChangeMidiIn id ->
-            ( { model | midiIn = selectMidiPort model.midiInputs id }, WebMidi.selectMidiIn (Just id) )
 
         ChangeMidiCC cc ->
             ( { model | midiCc = clamp 0 127 (Result.withDefault 0 (String.toInt cc)) }, Cmd.none )
@@ -216,19 +208,13 @@ midiSenderControl model =
         ]
 
 
-midiInOutControl : Model -> Html Msg
-midiInOutControl model =
+midiOutControl : Model -> Html Msg
+midiOutControl model =
     div []
         [ div []
-            [ text " Midi inputs: "
-            , select [ onInput ChangeMidiIn ] (nullMidiOption :: (List.map makeSelectionOption model.midiInputs))
-            ]
-        , div []
             [ text " Midi outputs: "
             , select [ onInput ChangeMidiOut ] (nullMidiOption :: (List.map makeSelectionOption model.midiOutputs))
             ]
-        , div []
-            [ text ("Current Midi Input: " ++ (midiPortName model.midiIn)) ]
         , div []
             [ text ("Current Midi Output: " ++ (midiPortName model.midiOut)) ]
         ]
@@ -237,7 +223,7 @@ midiInOutControl model =
 view : Model -> Html Msg
 view model =
     div []
-        [ midiInOutControl model
+        [ midiOutControl model
         , midiSenderControl model
         , div []
             (List.map

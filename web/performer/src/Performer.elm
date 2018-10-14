@@ -32,7 +32,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { receivedMessages = []
+    ( { loggedMessages = []
       , midiOutputs = []
       , midiOut = Nothing
       , midiChannel = 1
@@ -47,7 +47,7 @@ init =
 
 
 type alias Model =
-    { receivedMessages : List String
+    { loggedMessages : List String
     , midiOutputs : List MidiPort
     , midiOut : Maybe MidiPort
     , midiChannel : Int
@@ -60,11 +60,10 @@ type alias Model =
 
 
 type Msg
-    = ReceiveMessage String
+    = LogMessage String
     | MidiAccess ( List MidiPort, List MidiPort )
     | ChangeMidiOut String
     | WebSocketMessage String
-    | MidiMessage (List Int)
     | ChangeMidiChannel String
     | ChangeMidiCC String
 
@@ -72,8 +71,8 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ReceiveMessage message ->
-            ( { model | receivedMessages = message :: model.receivedMessages }, Cmd.none )
+        LogMessage message ->
+            ( { model | loggedMessages = message :: model.loggedMessages }, Cmd.none )
 
         MidiAccess ( _, outputs ) ->
             ( { model | midiOutputs = outputs }, Cmd.none )
@@ -94,13 +93,10 @@ update msg model =
             in
                 case maybeValue of
                     Err _ ->
-                        ( { model | receivedMessages = ("unsent websocket message: " ++ wsmsg) :: model.receivedMessages }, Cmd.none )
+                        ( { model | loggedMessages = ("unsent websocket message: " ++ wsmsg) :: model.loggedMessages }, Cmd.none )
 
                     Ok int ->
                         ( model, (sendCC model.midiChannel model.midiCc int) )
-
-        MidiMessage midi ->
-            ( { model | receivedMessages = (midiToString midi) :: model.receivedMessages }, Cmd.none )
 
 
 midiToString : List Int -> String
@@ -153,21 +149,15 @@ onMidiAccess data =
     MidiAccess data
 
 
-onRecvMidi : List Int -> Msg
-onRecvMidi midi =
-    MidiMessage midi
-
-
 onMidiError : ( String, String ) -> Msg
 onMidiError ( name, message ) =
-    ReceiveMessage ("midi error: name: " ++ name ++ " message: " ++ message)
+    LogMessage ("midi error: name: " ++ name ++ " message: " ++ message)
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ WebMidi.midiAccess onMidiAccess
-        , WebMidi.recvMidi onRecvMidi
         , WebMidi.midiError onMidiError
         , WebSocket.listen backendServerAddress WebSocketMessage
         ]
@@ -228,6 +218,6 @@ view model =
         , div []
             (List.map
                 (\msg -> div [] [ text msg ])
-                model.receivedMessages
+                model.loggedMessages
             )
         ]

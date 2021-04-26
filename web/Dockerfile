@@ -13,7 +13,7 @@ FROM archlinux/base as builder
 # Install prerequisites
 # (Ruby and Git are needed for elm-github-install)
 # (OpenSSL is needed to install Elm)
-RUN pacman -Sy --noconfirm yarn ruby git openssl
+RUN pacman -Sy --noconfirm yarn ruby git openssl glibc
 RUN yarn global add elm@0.18.0 elm-github-install
 
 # Create a directory for our Elm source code,

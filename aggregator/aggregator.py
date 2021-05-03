@@ -92,8 +92,8 @@ def main():
         asyncio.get_event_loop().run_forever()
     else:
         logging.info('SSL is disabled.')
-        asyncio.get_event_loop().run_until_complete(
-            websockets.serve(handler, SERVER_ADDRESS, PORT))
+        server = websockets.serve(handler, SERVER_ADDRESS, PORT)
+        asyncio.get_event_loop().run_until_complete(server)
         asyncio.get_event_loop().run_forever()
 
 
